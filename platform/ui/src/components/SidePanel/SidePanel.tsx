@@ -21,6 +21,7 @@ import Tooltip from '../Tooltip';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import './style.css';
+import TextEditor from '../../NewComponents/TextEditor';
 
 const borderSize = 4;
 const expandedWidth = 248;
@@ -174,39 +175,6 @@ const SidePanel = ({
             )}
           />
         </div>
-        <div className={classnames('flex flex-col space-y-3 mt-3')}>
-          {_childComponents.map((childComponent, index) => (
-            <Tooltip
-              position={side === 'left' ? 'right' : 'left'}
-              key={index}
-              content={`${childComponent.label}`}
-              className={classnames(
-                'flex items-center',
-                side === 'left' ? 'justify-end ' : 'justify-start '
-              )}
-            >
-              <IconButton
-                id={`${childComponent.name}-btn`}
-                variant="text"
-                color="inherit"
-                size="initial"
-                className="text-primary-active"
-                onClick={() => {
-                  updateActiveTabIndex(index);
-                }}
-              >
-                <Icon
-                  name={childComponent.iconName}
-                  className="text-primary-active"
-                  style={{
-                    width: '22px',
-                    height: '22px',
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          ))}
-        </div>
       </>
     );
   };
@@ -347,41 +315,7 @@ function _getMoreThanOneTabLayout(
             nextEl: nextRef?.current,
           }}
         >
-          {tabs.map((obj, index) => (
-            <SwiperSlide key={index}>
-              <div
-                className={classnames(
-                  index === activeTabIndex
-                    ? 'bg-secondary-main text-white'
-                    : 'text-aqua-pale',
-                  'flex cursor-pointer px-4 py-1 rounded-[4px]  flex-col justify-center items-center text-center hover:text-white'
-                )}
-                key={index}
-                onClick={() => {
-                  updateActiveTabIndex(index);
-                }}
-                data-cy={`${obj.name}-btn`}
-              >
-                <span>
-                  <Icon
-                    name={obj.iconName}
-                    className={classnames(
-                      index === activeTabIndex
-                        ? 'text-white'
-                        : 'text-primary-active'
-                    )}
-                    style={{
-                      width: '22px',
-                      height: '22px',
-                    }}
-                  />
-                </span>
-                <span className="text-[10px] select-none font-medium whitespace-nowrap mt-[5px]">
-                  {obj.label}
-                </span>
-              </div>
-            </SwiperSlide>
-          ))}
+          <TextEditor />
         </Swiper>
       </div>
     </div>
