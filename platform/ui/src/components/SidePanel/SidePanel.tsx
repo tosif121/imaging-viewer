@@ -23,55 +23,6 @@ import 'swiper/css/navigation';
 import './style.css';
 import TextEditor from '../../NewComponents/TextEditor';
 
-const borderSize = 4;
-const expandedWidth = 248;
-const collapsedWidth = 25;
-
-const baseStyle = {
-  maxWidth: `${expandedWidth}px`,
-  width: `${expandedWidth}px`,
-};
-
-const collapsedHideWidth = expandedWidth - collapsedWidth - borderSize;
-const styleMap = {
-  open: {
-    left: { marginLeft: '0px' },
-    right: { marginRight: '0px' },
-  },
-  closed: {
-    left: { marginLeft: `-${collapsedHideWidth}px` },
-    right: { marginRight: `-${collapsedHideWidth}px` },
-  },
-};
-
-const baseClasses =
-  'transition-all duration-300 ease-in-out h-100 bg-black border-black justify-start box-content flex flex-col';
-
-const classesMap = {
-  open: {
-    left: `mr-1`,
-    right: `ml-1`,
-  },
-  closed: {
-    left: `mr-2 items-end`,
-    right: `ml-2 items-start`,
-  },
-};
-
-const openStateIconName = {
-  left: 'push-left',
-  right: 'push-right',
-};
-
-const position = {
-  left: {
-    right: 5,
-  },
-  right: {
-    left: 5,
-  },
-};
-
 const SidePanel = ({
   servicesManager,
   side,
@@ -80,6 +31,64 @@ const SidePanel = ({
   tabs,
 }) => {
   const panelService: PanelService = servicesManager?.services?.panelService;
+
+  const borderSize = 4;
+  const expandedWidthLeft = 220;
+  const expandedWidthRight = 350;
+
+  const collapsedHideWidthLeft = expandedWidthLeft - 25 - borderSize;
+  const collapsedHideWidthRight = expandedWidthRight - 25 - borderSize;
+
+  const baseStyle = {
+    maxWidth: `${side === 'left' ? expandedWidthLeft : expandedWidthRight}px`,
+    width: `${side === 'left' ? expandedWidthLeft : expandedWidthRight}px`,
+  };
+  const styleMap = {
+    open: {
+      left: { marginLeft: '0px' },
+      right: { marginRight: '0px' },
+    },
+    closed: {
+      left: {
+        marginLeft: `-${
+          side === 'left' ? collapsedHideWidthLeft : collapsedHideWidthRight
+        }px`,
+      },
+      right: {
+        marginRight: `-${
+          side === 'left' ? collapsedHideWidthLeft : collapsedHideWidthRight
+        }px`,
+      },
+    },
+  };
+
+  const baseClasses =
+    'transition-all duration-300 ease-in-out h-100 bg-black border-black justify-start box-content flex flex-col';
+
+  const classesMap = {
+    open: {
+      left: 'mr-1',
+      right: 'ml-1',
+    },
+    closed: {
+      left: 'mr-2 items-end',
+      right: 'ml-2 items-start',
+    },
+  };
+
+  const openStateIconName = {
+    left: 'push-left',
+    right: 'push-right',
+  };
+
+  const position = {
+    left: {
+      right: '5px',
+    },
+    right: {
+      left: '5px',
+    },
+  };
 
   const { t } = useTranslation('SidePanel');
 
