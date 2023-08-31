@@ -34,7 +34,7 @@ const SidePanel = ({
 
   const borderSize = 4;
   const expandedWidthLeft = 220;
-  const expandedWidthRight = 350;
+  const expandedWidthRight = 500;
 
   const collapsedHideWidthLeft = expandedWidthLeft - 25 - borderSize;
   const collapsedHideWidthRight = expandedWidthRight - 25 - borderSize;
