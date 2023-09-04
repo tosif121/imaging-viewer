@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface TextEditorProps {}
 
@@ -21,23 +21,43 @@ const TextEditor: React.FC<TextEditorProps> = () => {
   }: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = target.value;
     setSelectedItem(selectedValue);
-    setText('');
+
+    if (selectedValue === 'CHEST X RAY (PA VIEW)') {
+      const initialText = `
+      CHEST X RAY (PA VIEW)
+
+     OBSERVATION:
+        Bronchovascular markings are prominent.
+        Bilateral hila are prominent.
+        Both costo-phrenic angles appear clear.
+        Cardiothoracic ratio is normal.
+        Both domes of diaphragm appear normal.
+        Thoracic soft tissue and skeletal system appear unremarkable.
+
+     IMPRESSION:
+        Bronchovascular markings are prominent.
+        Bilateral hila are prominent.
+
+     ADVICE: Please Correlate Clinically
+      `;
+      setText(initialText);
+    } else {
+      setText('');
+    }
   };
 
-  const handleTextChange = ({
-    target,
-  }: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(target.value);
-  };
+  useEffect(() => {
+    setPreviewText(text);
+  }, [text]);
 
   const handleSave = () => {
     console.log('Saving:', text);
   };
 
   const handleView = () => {
-    const previewFormatted = text.replace(/\n/g, '<br>');
-    setPreviewText(previewFormatted);
-    setIsModalOpen(true);
+    if (selectedItem) {
+      setIsModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -107,16 +127,16 @@ const TextEditor: React.FC<TextEditorProps> = () => {
       )}
 
       <textarea
-        value={text}
-        onChange={handleTextChange}
+        contentEditable={!selectedItem ? false : true}
         className={`${
           selectedItem
-            ? 'border-2 rounded w-full h-full mb-2 p-2 focus:outline-none focus:border-blue-500'
+            ? 'border-2 rounded w-full h-full mb-2 p-2 focus:outline-none focus:border-blue-500 text-primary-dark'
             : 'text-white px-4 py-2 rounded w-full mr-6 bg-gray-300'
         }`}
-        style={{ minHeight: '65vh' }}
-        disabled={!selectedItem}
-        placeholder="Enter your report here..."
+        style={{ minHeight: '65vh', whiteSpace: 'pre-line' }}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        disabled={!selectedItem} // Set the disabled attribute based on selectedItem
       ></textarea>
 
       <div className="flex mt-1">
