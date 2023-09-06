@@ -38,8 +38,7 @@ const TextEditor: React.FC<TextEditorProps> = () => {
         Bronchovascular markings are prominent.
         Bilateral hila are prominent.
 
-     ADVICE: Please Correlate Clinically
-      `;
+     ADVICE: Please Correlate Clinically`;
       setText(initialText);
     } else {
       setText('');
