@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactSelect from 'react-select';
+import jsPDF from 'jspdf';
 
 const reports = [
   {
@@ -70,7 +71,38 @@ const TextEditor: React.FC = () => {
   }, [text]);
 
   const handleSave = () => {
-    console.log('Saving:', text);
+    if (text && selectedItem) {
+      const doc = new jsPDF();
+
+      // Split the text into lines
+      const lines = text.split('\n');
+
+      // Calculate the height of each line and the total height of all lines
+      const lineHeight = 10; // You can adjust this value as needed
+      const totalHeight = lines.length * lineHeight;
+
+      // Set the font size and starting position
+      doc.setFontSize(12);
+      let yPos = 10; // Starting y-position
+
+      // Loop through the lines and add them to the PDF
+      lines.forEach(line => {
+        doc.text(10, yPos, line);
+        yPos += lineHeight;
+
+        if (yPos + lineHeight > doc.internal.pageSize.height) {
+          doc.addPage();
+          yPos = 10;
+        }
+      });
+
+      const reportName = selectedItem.label.replace(/ /g, '_');
+      const pdfFileName = `${reportName}.pdf`;
+
+      doc.save(pdfFileName);
+    } else {
+      console.warn('Cannot generate PDF without text or selected report');
+    }
   };
 
   const handleView = () => {
@@ -177,8 +209,11 @@ const TextEditor: React.FC = () => {
           View
         </button>
         <button
+          disabled={!text || !selectedItem}
           onClick={handleSave}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full"
+          className={`${
+            text ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300'
+          } text-white px-4 py-2 rounded w-full mr-6`}
         >
           Save
         </button>
