@@ -43,6 +43,27 @@ const TextEditor: React.FC = () => {
   } | null>(null);
   const [previewText, setPreviewText] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  useEffect(() => {
+    if (selectedItem) {
+      const selectedReport = reports.find(
+        report => `${report.name}-${report.id}` === selectedItem.value
+      );
+      if (selectedReport) {
+        const initialText = `
+          ${selectedReport.name}
+
+         OBSERVATION:
+            ${selectedReport.content.OBSERVATION}
+
+         IMPRESSION:
+            ${selectedReport.content.IMPRESSION}
+        `;
+        setText(initialText);
+      }
+    } else {
+      setText('');
+    }
+  }, [selectedItem]);
 
   useEffect(() => {
     setPreviewText(text);
@@ -67,42 +88,13 @@ const TextEditor: React.FC = () => {
     label: report.name,
   }));
 
-  const handleDropdownChange = (selectedOption: {
-    value: string;
-    label: string;
-  }) => {
-    const selectedReportName = selectedOption.label; // Extract the report name from the label
-
-    const selectedReport = reports.find(
-      report => `${report.name}-${report.id}` === selectedOption.value
-    );
-
-    if (selectedReport) {
-      // Check if the selected report has the same name as the currently selected report
-      if (
-        selectedItem &&
-        selectedItem.label === selectedReportName &&
-        selectedItem.value !== selectedOption.value
-      ) {
-        return;
-      }
-
-      setSelectedItem(selectedOption);
-
-      const initialText = `
-        ${selectedReportName}
-
-       OBSERVATION:
-          ${selectedReport.content.OBSERVATION}
-
-       IMPRESSION:
-          ${selectedReport.content.IMPRESSION}
-      `;
-      setText(initialText);
-    } else {
-      setSelectedItem(null);
-      setText('');
-    }
+  const handleDropdownChange = (
+    selectedOption: {
+      value: string;
+      label: string;
+    } | null
+  ) => {
+    setSelectedItem(selectedOption);
   };
 
   return (
