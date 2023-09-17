@@ -1,56 +1,108 @@
 import React, { useEffect, useState } from 'react';
+import ReactSelect from 'react-select';
+import jsPDF from 'jspdf';
 
-interface TextEditorProps {}
+const reports = [
+  {
+    id: 1,
+    name: 'X - RAY - HEEL LATERAL VIEW',
+    content: {
+      OBSERVATION: `-- The visualized bones are normal.
+                      -- Soft tissues are normal.
+                      -- Ankle joint appears normal.`,
+      IMPRESSION: `• No significant abnormality seen.`,
+    },
+  },
+  {
+    id: 2,
+    name: 'X - RAY - HEEL LATERAL VIEW',
+    content: {
+      OBSERVATION: `--  Visualized bones of pelvis are normal.
+                      --  The hip joint appears normal.
+                      --  No abnormality is seen in head, neck and visualized parts of femur.
+                      --  No abnormal radio opaque shadow seen.`,
+      IMPRESSION: `• No significant abnormality noted.`,
+    },
+  },
+  {
+    id: 3,
+    name: 'X – RAY - HIP AP STANDING VIEW',
+    content: {
+      OBSERVATION: `--  Visualized parts of tibia and fibula appear normal.
+                      --  The visualized parts of ankle joint appear normal.
+                      -- Soft tissues are normal.`,
+      IMPRESSION: `• No significant abnormality seen.`,
+    },
+  },
+];
 
-const TextEditor: React.FC<TextEditorProps> = () => {
+const TextEditor: React.FC = () => {
   const [text, setText] = useState<string>('');
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [previewText, setPreviewText] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const reports = [
-    'CHEST X RAY (PA VIEW)',
-    'X-RAY HEEL (AXIAL LAT VIEW)',
-    'X-RAY ABDOMEN (SUPINE VIEW)',
-    'X-RAY ABDOMEN STANDING VIEW',
-    'X-RAY ANKLE JOINT WITH HEEL (LAT VIEW)',
-    'X-RAY HEEL',
-  ];
+  useEffect(() => {
+    if (selectedItem) {
+      const selectedReport = reports.find(
+        report => `${report.name}-${report.id}` === selectedItem.value
+      );
+      if (selectedReport) {
+        const initialText = `
+          ${selectedReport.name}
 
-  const handleDropdownChange = ({
-    target,
-  }: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = target.value;
-    setSelectedItem(selectedValue);
+         OBSERVATION:
+            ${selectedReport.content.OBSERVATION}
 
-    if (selectedValue === 'CHEST X RAY (PA VIEW)') {
-      const initialText = `
-      CHEST X RAY (PA VIEW)
-
-     OBSERVATION:
-        Bronchovascular markings are prominent.
-        Bilateral hila are prominent.
-        Both costo-phrenic angles appear clear.
-        Cardiothoracic ratio is normal.
-        Both domes of diaphragm appear normal.
-        Thoracic soft tissue and skeletal system appear unremarkable.
-
-     IMPRESSION:
-        Bronchovascular markings are prominent.
-        Bilateral hila are prominent.
-
-     ADVICE: Please Correlate Clinically`;
-      setText(initialText);
+         IMPRESSION:
+            ${selectedReport.content.IMPRESSION}
+        `;
+        setText(initialText);
+      }
     } else {
       setText('');
     }
-  };
+  }, [selectedItem]);
 
   useEffect(() => {
     setPreviewText(text);
   }, [text]);
 
   const handleSave = () => {
-    console.log('Saving:', text);
+    if (text && selectedItem) {
+      const doc = new jsPDF();
+
+      // Split the text into lines
+      const lines = text.split('\n');
+
+      // Calculate the height of each line and the total height of all lines
+      const lineHeight = 10; // You can adjust this value as needed
+      const totalHeight = lines.length * lineHeight;
+
+      // Set the font size and starting position
+      doc.setFontSize(12);
+      let yPos = 10; // Starting y-position
+
+      // Loop through the lines and add them to the PDF
+      lines.forEach(line => {
+        doc.text(10, yPos, line);
+        yPos += lineHeight;
+
+        if (yPos + lineHeight > doc.internal.pageSize.height) {
+          doc.addPage();
+          yPos = 10;
+        }
+      });
+
+      const reportName = selectedItem.label.replace(/ /g, '_');
+      const pdfFileName = `${reportName}.pdf`;
+
+      doc.save(pdfFileName);
+    } else {
+      console.warn('Cannot generate PDF without text or selected report');
+    }
   };
 
   const handleView = () => {
@@ -61,6 +113,20 @@ const TextEditor: React.FC<TextEditorProps> = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const reportOptions = reports.map(report => ({
+    value: `${report.name}-${report.id}`,
+    label: report.name,
+  }));
+
+  const handleDropdownChange = (
+    selectedOption: {
+      value: string;
+      label: string;
+    } | null
+  ) => {
+    setSelectedItem(selectedOption);
   };
 
   return (
@@ -107,23 +173,17 @@ const TextEditor: React.FC<TextEditorProps> = () => {
           </tr>
         </tbody>
       </table>
-      <select
-        value={selectedItem || ''}
-        onChange={handleDropdownChange}
-        className="border-2 rounded w-full p-2 mb-2"
-      >
-        <option value="" disabled>
-          Select a report
-        </option>
-        {reports.map(report => (
-          <option key={report} value={report}>
-            {report}
-          </option>
-        ))}
-      </select>
-      {selectedItem && (
-        <p className="mb-2 text-blue-500">Selected Report: {selectedItem}</p>
-      )}
+      <ReactSelect
+        value={selectedItem}
+        onChange={selectedOption => handleDropdownChange(selectedOption)}
+        options={reportOptions}
+        placeholder="Select a report"
+        isSearchable={true}
+      />
+
+      <p className="mb-2 text-blue-500">
+        Selected Report: {selectedItem ? selectedItem.label : ''}
+      </p>
 
       <textarea
         contentEditable={!selectedItem ? false : true}
@@ -135,7 +195,7 @@ const TextEditor: React.FC<TextEditorProps> = () => {
         style={{ minHeight: '65vh', whiteSpace: 'pre-line' }}
         value={text}
         onChange={e => setText(e.target.value)}
-        disabled={!selectedItem} // Set the disabled attribute based on selectedItem
+        disabled={!selectedItem}
       ></textarea>
 
       <div className="flex mt-1">
@@ -149,17 +209,20 @@ const TextEditor: React.FC<TextEditorProps> = () => {
           View
         </button>
         <button
+          disabled={!text || !selectedItem}
           onClick={handleSave}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full"
+          className={`${
+            text ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300'
+          } text-white px-4 py-2 rounded w-full mr-6`}
         >
           Save
         </button>
       </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-4 rounded overflow-auto">
             <h2 className="text-lg font-semibold mb-2">Preview:</h2>
-
             <table className="border-2 rounded w-full mb-3 text-black whitespace-nowrap">
               <thead>
                 <tr>
