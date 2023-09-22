@@ -1,40 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactSelect from 'react-select';
 import jsPDF from 'jspdf';
-
-const reports = [
-  {
-    id: 1,
-    name: 'X - RAY - HEEL LATERAL VIEW',
-    content: {
-      OBSERVATION: `-- The visualized bones are normal.
-                      -- Soft tissues are normal.
-                      -- Ankle joint appears normal.`,
-      IMPRESSION: `• No significant abnormality seen.`,
-    },
-  },
-  {
-    id: 2,
-    name: 'X - RAY - HEEL LATERAL VIEW',
-    content: {
-      OBSERVATION: `--  Visualized bones of pelvis are normal.
-                      --  The hip joint appears normal.
-                      --  No abnormality is seen in head, neck and visualized parts of femur.
-                      --  No abnormal radio opaque shadow seen.`,
-      IMPRESSION: `• No significant abnormality noted.`,
-    },
-  },
-  {
-    id: 3,
-    name: 'X – RAY - HIP AP STANDING VIEW',
-    content: {
-      OBSERVATION: `--  Visualized parts of tibia and fibula appear normal.
-                      --  The visualized parts of ankle joint appear normal.
-                      -- Soft tissues are normal.`,
-      IMPRESSION: `• No significant abnormality seen.`,
-    },
-  },
-];
+import axios from 'axios';
 
 const TextEditor: React.FC = () => {
   const [text, setText] = useState<string>('');
@@ -44,10 +11,26 @@ const TextEditor: React.FC = () => {
   } | null>(null);
   const [previewText, setPreviewText] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    const apiUrl = 'http://dev.iotcom.io:5500/templates';
+    axios
+      .get(apiUrl)
+      .then(response => {
+        // Handle the response data here
+        setReports(response.data);
+      })
+      .catch(error => {
+        // Handle any errors here
+        console.error('Error:', error);
+      });
+  }, []);
+
   useEffect(() => {
     if (selectedItem) {
       const selectedReport = reports.find(
-        report => `${report.name}-${report.id}` === selectedItem.value
+        report => `${report.name}-${report.templateID}` === selectedItem.value
       );
       if (selectedReport) {
         const initialText = `
@@ -64,7 +47,7 @@ const TextEditor: React.FC = () => {
     } else {
       setText('');
     }
-  }, [selectedItem]);
+  }, [selectedItem, reports]);
 
   useEffect(() => {
     setPreviewText(text);
@@ -116,7 +99,7 @@ const TextEditor: React.FC = () => {
   };
 
   const reportOptions = reports.map(report => ({
-    value: `${report.name}-${report.id}`,
+    value: `${report.name}-${report.templateID}`,
     label: report.name,
   }));
 
