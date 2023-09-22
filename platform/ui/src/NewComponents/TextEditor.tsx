@@ -28,6 +28,36 @@ const TextEditor: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Define the data you want to send in the request body
+    const requestData = {
+      StudyInstanceUID: '1.2.840.113704.9.1000.16.0.20230715132938816',
+    };
+
+    // Convert the requestData object into a query string
+    const queryString = Object.keys(requestData)
+      .map(
+        key =>
+          encodeURIComponent(key) + '=' + encodeURIComponent(requestData[key])
+      )
+      .join('&');
+
+    // Make the API request when the component mounts
+    fetch(`http://dev.iotcom.io:5500/StudyID?${queryString}`, {
+      method: 'GET', // Use GET method
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(responseData => {
+        console.log(responseData, 'responseData');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }, []);
+
+  useEffect(() => {
     if (selectedItem) {
       const selectedReport = reports.find(
         report => `${report.name}-${report.templateID}` === selectedItem.value
