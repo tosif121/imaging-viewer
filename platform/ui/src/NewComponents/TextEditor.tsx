@@ -82,16 +82,20 @@ const TextEditor: React.FC = () => {
     if (text && selectedItem) {
       const doc = new jsPDF();
 
+      // Add the table data to the PDF
+      doc.setFontSize(12);
+      doc.text(10, 10, `Patient ID: ${tableData.patientID}`);
+      doc.text(10, 20, `Patient Name: ${tableData.name}`);
+      doc.text(10, 30, `Date: ${formattedDate}`);
+      doc.text(10, 40, `Location: ${tableData.location}`);
+      doc.text(10, 50, `Ref Doctor: ${tableData.ReferringPhysicianName}`);
+
       // Split the text into lines
       const lines = text.split('\n');
 
       // Calculate the height of each line and the total height of all lines
       const lineHeight = 10; // You can adjust this value as needed
-      const totalHeight = lines.length * lineHeight;
-
-      // Set the font size and starting position
-      doc.setFontSize(12);
-      let yPos = 10; // Starting y-position
+      let yPos = 60; // Starting y-position for text
 
       // Loop through the lines and add them to the PDF
       lines.forEach(line => {
