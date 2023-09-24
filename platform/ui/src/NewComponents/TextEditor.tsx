@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactSelect from 'react-select';
 import jsPDF from 'jspdf';
 import axios from 'axios';
+import moment from 'moment';
 
 const TextEditor: React.FC = () => {
   const [text, setText] = useState<string>('');
@@ -12,6 +13,11 @@ const TextEditor: React.FC = () => {
   const [previewText, setPreviewText] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [reports, setReports] = useState([]);
+  const [tableData, setTableData] = useState([]);
+
+  const url = window.location.href;
+  const urlParams = new URLSearchParams(url.split('?')[1]);
+  const studyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
 
   useEffect(() => {
     const apiUrl = 'http://dev.iotcom.io:5500/templates';
@@ -28,29 +34,18 @@ const TextEditor: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Define the data you want to send in the request body
     const requestData = {
-      StudyInstanceUID: '1.2.840.113704.9.1000.16.0.20230715132938816',
+      StudyInstanceUID: studyInstanceUIDs,
     };
 
-    // Convert the requestData object into a query string
-    const queryString = Object.keys(requestData)
-      .map(
-        key =>
-          encodeURIComponent(key) + '=' + encodeURIComponent(requestData[key])
-      )
-      .join('&');
-
-    // Make the API request when the component mounts
-    fetch(`http://dev.iotcom.io:5500/StudyID?${queryString}`, {
-      method: 'GET', // Use GET method
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => response.json())
-      .then(responseData => {
-        console.log(responseData, 'responseData');
+    axios
+      .post('http://dev.iotcom.io:5500/StudyID', requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
+        setTableData(response.data[0]);
       })
       .catch(error => {
         console.error('Error:', error);
@@ -142,47 +137,39 @@ const TextEditor: React.FC = () => {
     setSelectedItem(selectedOption);
   };
 
+  const formattedDate = moment(tableData.Date, 'D/M/YYYY, h:mm:ss a').format(
+    'DD-MMMM-YYYY'
+  );
+
   return (
     <div className="p-1">
-      <table className="border-2 rounded w-full mb-3 bg-gray-800 text-white whitespace-nowrap">
-        <thead>
+      <table className="min-w-full border text-center text-sm font-light text-white mb-3">
+        <thead className="border-b font-medium">
           <tr>
-            <th className="border-white border-2 text-center text-base">
+            <th scope="col" className="border-r">
               Patient ID
             </th>
-            <th className="border-white border-2 text-center text-base">
+            <th scope="col" className="border-r">
               Patient Name
             </th>
-            <th className="border-white border-2 text-center text-base">
-              Age Yrs
-            </th>
-            <th className="border-white border-2 text-center text-base">
+            <th scope="col" className="border-r">
               Date
             </th>
-            <th className="border-white border-2 text-center text-base">
-              Gender
+            <th scope="col" className="border-r">
+              Location
             </th>
-            <th className="border-white border-2 text-center text-base">
+            <th scope="col" className="border-r">
               Ref Doctor
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td className="border-white border-2 text-center text-base">121</td>
-            <td className="border-white border-2 text-center text-base">
-              Karan
-            </td>
-            <td className="border-white border-2 text-center text-base">27</td>
-            <td className="border-white border-2 text-center text-base">
-              30-Aug-2023
-            </td>
-            <td className="border-white border-2 text-center text-base">
-              Male
-            </td>
-            <td className="border-white border-2 text-center text-base">
-              #01112
-            </td>
+          <tr className="border-b font-medium">
+            <td className="border-r">{tableData.patientID}</td>
+            <td className="border-r">{tableData.name}</td>
+            <td className="border-r">{formattedDate}</td>
+            <td className="border-r">{tableData.location}</td>
+            <td className="border-r">{tableData.ReferringPhysicianName}</td>
           </tr>
         </tbody>
       </table>
@@ -236,52 +223,39 @@ const TextEditor: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-4 rounded overflow-auto">
             <h2 className="text-lg font-semibold mb-2">Preview:</h2>
-            <table className="border-2 rounded w-full mb-3 text-black whitespace-nowrap">
-              <thead>
+            <table className="min-w-full border text-center text-sm font-light mb-3 text-dark">
+              <thead className="border-b font-medium">
                 <tr>
-                  <th className="border-black border-2 text-center text-base">
+                  <th scope="col" className="border-r">
                     Patient ID
                   </th>
-                  <th className="border-black border-2 text-center text-base">
+                  <th scope="col" className="border-r">
                     Patient Name
                   </th>
-                  <th className="border-black border-2 text-center text-base">
-                    Age Yrs
-                  </th>
-                  <th className="border-black border-2 text-center text-base">
+                  <th scope="col" className="border-r">
                     Date
                   </th>
-                  <th className="border-black border-2 text-center text-base">
-                    Gender
+                  <th scope="col" className="border-r">
+                    Location
                   </th>
-                  <th className="border-black border-2 text-center text-base">
+                  <th scope="col" className="border-r">
                     Ref Doctor
                   </th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="border-black border-2 text-center text-base">
-                    121
-                  </td>
-                  <td className="border-black border-2 text-center text-base">
-                    Karan
-                  </td>
-                  <td className="border-black border-2 text-center text-base">
-                    27
-                  </td>
-                  <td className="border-black border-2 text-center text-base">
-                    30-Aug-2023
-                  </td>
-                  <td className="border-black border-2 text-center text-base">
-                    Male
-                  </td>
-                  <td className="border-black border-2 text-center text-base">
-                    #01112
+                <tr className="border-b font-medium">
+                  <td className="border-r">{tableData.patientID}</td>
+                  <td className="border-r">{tableData.name}</td>
+                  <td className="border-r">{formattedDate}</td>
+                  <td className="border-r">{tableData.location}</td>
+                  <td className="border-r">
+                    {tableData.ReferringPhysicianName}
                   </td>
                 </tr>
               </tbody>
             </table>
+
             <div
               className="border-2 rounded p-2 focus:outline-none focus:border-blue-500 overflow-y-auto whitespace-pre-line"
               dangerouslySetInnerHTML={{
