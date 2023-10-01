@@ -3,6 +3,11 @@ import ReactSelect from 'react-select';
 import jsPDF from 'jspdf';
 import axios from 'axios';
 import moment from 'moment';
+import {
+  getDataFromServer,
+  postDatatoServer,
+  uploadImageToServer,
+} from '../utils/services';
 
 const TextEditor: React.FC = () => {
   const [text, setText] = useState<string>('');
@@ -14,43 +19,82 @@ const TextEditor: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [reports, setReports] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const [getUploadImages, setGetUploadImages] = useState([]);
 
   const url = window.location.href;
   const urlParams = new URLSearchParams(url.split('?')[1]);
   const studyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
 
   useEffect(() => {
-    const apiUrl = 'http://dev.iotcom.io:5500/templates';
-    axios
-      .get(apiUrl)
-      .then(response => {
-        // Handle the response data here
-        setReports(response.data);
-      })
-      .catch(error => {
-        // Handle any errors here
-        console.error('Error:', error);
-      });
+    function handleResponse(responseData) {
+      if (responseData.status === 'success') {
+        setReports(responseData.response);
+      }
+    }
+
+    const endpoint = 'templates';
+    const params = {
+      token: '',
+    };
+    const props = {};
+
+    getDataFromServer({
+      end_point: endpoint,
+      params,
+      call_back: handleResponse,
+      props,
+    });
   }, []);
 
   useEffect(() => {
-    const requestData = {
+    function handleResponse(responseData) {
+      if (responseData.status === 'success') {
+        setTableData(responseData.response[0]);
+      } else {
+        console.error('Error:', responseData.error);
+      }
+    }
+    const endpoint = 'StudyID';
+    const requestBody = {
       StudyInstanceUID: studyInstanceUIDs,
     };
+    const props = {
+      header: true,
+    };
 
-    axios
-      .post('http://dev.iotcom.io:5500/StudyID', requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then(response => {
-        setTableData(response.data[0]);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+    postDatatoServer({
+      end_point: endpoint,
+      body: requestBody,
+      call_back: handleResponse,
+      props,
+    });
   }, []);
+
+  const handleUploadImage = async (item, key) => {
+    try {
+      const endPoint = 'upload/report';
+
+      const promisesArray = getUploadImages.map(async file => {
+        const responseImage = await uploadImageToServer({
+          end_point: `${endPoint}/?id=${tableData.id}`,
+          data: file,
+          props: item,
+        });
+        return responseImage;
+      });
+
+      console.log(promisesArray, 'promisesArray');
+      const dataArray = await Promise.all(promisesArray);
+
+      if (dataArray.length > 0) {
+        setGetUploadImages([]);
+        console.log('successful');
+      }
+      // toast.success('Upload successful');
+    } catch (err) {
+      console.error('Error occurred during image upload:', err);
+    }
+  };
 
   useEffect(() => {
     if (selectedItem) {
@@ -81,7 +125,6 @@ const TextEditor: React.FC = () => {
   const handleSave = () => {
     if (text && selectedItem) {
       const doc = new jsPDF();
-
       // Add the table data to the PDF
       doc.setFontSize(12);
       doc.text(10, 10, `Patient ID: ${tableData.patientID}`);
@@ -110,7 +153,7 @@ const TextEditor: React.FC = () => {
 
       const reportName = selectedItem.label.replace(/ /g, '_');
       const pdfFileName = `${reportName}.pdf`;
-
+      setGetUploadImages(pdfFileName);
       doc.save(pdfFileName);
     } else {
       console.warn('Cannot generate PDF without text or selected report');
