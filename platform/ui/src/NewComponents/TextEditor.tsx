@@ -70,32 +70,6 @@ const TextEditor: React.FC = () => {
     });
   }, []);
 
-  const handleUploadImage = async (item, key) => {
-    try {
-      const endPoint = 'upload/report';
-
-      const promisesArray = getUploadImages.map(async file => {
-        const responseImage = await uploadImageToServer({
-          end_point: `${endPoint}/?id=${tableData.id}`,
-          data: file,
-          props: item,
-        });
-        return responseImage;
-      });
-
-      console.log(promisesArray, 'promisesArray');
-      const dataArray = await Promise.all(promisesArray);
-
-      if (dataArray.length > 0) {
-        setGetUploadImages([]);
-        console.log('successful');
-      }
-      // toast.success('Upload successful');
-    } catch (err) {
-      console.error('Error occurred during image upload:', err);
-    }
-  };
-
   useEffect(() => {
     if (selectedItem) {
       const selectedReport = reports.find(
@@ -122,7 +96,29 @@ const TextEditor: React.FC = () => {
     setPreviewText(text);
   }, [text]);
 
-  const handleSave = () => {
+  const handleUploadPdf = async () => {
+    try {
+      const endPoint = 'upload/report';
+
+      const responseImage = await uploadImageToServer({
+        end_point: `${endPoint}/?id=${tableData.id}`,
+        data: file,
+      });
+
+      console.log(promisesArray, 'promisesArray');
+      const dataArray = await Promise.all(promisesArray);
+
+      if (dataArray.length > 0) {
+        setGetUploadImages([]);
+        console.log('successful');
+      }
+      // toast.success('Upload successful');
+    } catch (err) {
+      console.error('Error occurred during image upload:', err);
+    }
+  };
+
+  const handleSave = async () => {
     if (text && selectedItem) {
       const doc = new jsPDF();
       // Add the table data to the PDF
@@ -153,7 +149,33 @@ const TextEditor: React.FC = () => {
 
       const reportName = selectedItem.label.replace(/ /g, '_');
       const pdfFileName = `${reportName}.pdf`;
-      setGetUploadImages(pdfFileName);
+      const formData = new FormData();
+      const blob = doc.output('blob');
+
+      formData.append('file', blob, pdfFileName);
+
+      const endPoint = 'http://dev.iotcom.io:5500/upload/report';
+
+      try {
+        const responseImage = await axios.post(
+          `${endPoint}/?id=${tableData.id}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        if (responseImage.data.success) {
+          console.log('File uploaded successfully');
+        } else {
+          console.error('File upload failed');
+        }
+      } catch (error) {
+        console.error('Error during file upload:', error);
+      }
+
       doc.save(pdfFileName);
     } else {
       console.warn('Cannot generate PDF without text or selected report');

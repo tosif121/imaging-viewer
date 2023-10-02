@@ -69,7 +69,7 @@ export const uploadImageToServer = async ({ end_point, data, props }) => {
     formData.append(
       'file',
       data,
-      `${props.study}.${data.name.split('.')[data.name.split('.').length - 1]}`
+      `.${data.name.split('.')[data.name.split('.').length - 1]}`
     );
 
     const response = await axios.post(url, formData);
