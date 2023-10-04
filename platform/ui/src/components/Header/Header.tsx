@@ -49,16 +49,19 @@ function Header({
             )}
             <div className="ml-4">
               {WhiteLabeling?.createLogoComponentFn?.(React, props) || (
-                <Svg name="logo-ohif" />
+                <img
+                  src="/images/logo.png"
+                  className="img-fluid"
+                  width={180}
+                  alt="logo"
+                />
               )}
             </div>
           </div>
         </div>
         <div className="flex items-center">{children}</div>
         <div className="flex items-center">
-          <span className="mr-3 text-lg text-common-light">
-            {t('INVESTIGATIONAL USE ONLY')}
-          </span>
+          <span className="mr-3 text-lg text-common-light">{t('SUPRAVI')}</span>
           <Dropdown id="options" showDropdownIcon={false} list={menuOptions}>
             <IconButton
               id={'options-settings-icon'}

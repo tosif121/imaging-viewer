@@ -3,11 +3,8 @@ import ReactSelect from 'react-select';
 import jsPDF from 'jspdf';
 import axios from 'axios';
 import moment from 'moment';
-import {
-  getDataFromServer,
-  postDatatoServer,
-  uploadImageToServer,
-} from '../utils/services';
+import { getDataFromServer, postDatatoServer } from '../utils/services';
+import autoTable from 'jspdf-autotable';
 
 const TextEditor: React.FC = () => {
   const [text, setText] = useState<string>('');
@@ -96,47 +93,45 @@ const TextEditor: React.FC = () => {
     setPreviewText(text);
   }, [text]);
 
-  const handleUploadPdf = async () => {
-    try {
-      const endPoint = 'upload/report';
-
-      const responseImage = await uploadImageToServer({
-        end_point: `${endPoint}/?id=${tableData.id}`,
-        data: file,
-      });
-
-      console.log(promisesArray, 'promisesArray');
-      const dataArray = await Promise.all(promisesArray);
-
-      if (dataArray.length > 0) {
-        setGetUploadImages([]);
-        console.log('successful');
-      }
-      // toast.success('Upload successful');
-    } catch (err) {
-      console.error('Error occurred during image upload:', err);
-    }
-  };
-
   const handleSave = async () => {
     if (text && selectedItem) {
       const doc = new jsPDF();
       // Add the table data to the PDF
       doc.setFontSize(12);
-      doc.text(10, 10, `Patient ID: ${tableData.patientID}`);
-      doc.text(10, 20, `Patient Name: ${tableData.name}`);
-      doc.text(10, 30, `Date: ${formattedDate}`);
-      doc.text(10, 40, `Location: ${tableData.location}`);
-      doc.text(10, 50, `Ref Doctor: ${tableData.ReferringPhysicianName}`);
+      const table = [
+        ['Patient ID', 'Patient Name', 'Date', 'Location', 'Ref Doctor'],
+        [
+          tableData.patientID,
+          tableData.name,
+          formattedDate,
+          tableData.location,
+          tableData.ReferringPhysicianName,
+        ],
+      ];
 
-      // Split the text into lines
+      const tableStyles = {
+        tableWidth: 'auto',
+        theme: 'grid',
+        headStyles: {
+          fillColor: [255, 255, 255],
+          textColor: 0,
+          fontStyle: 'bold',
+          halign: 'center',
+        },
+        bodyStyles: {
+          fillColor: [255, 255, 255],
+          textColor: 0,
+          halign: 'center',
+        },
+      };
+
+      autoTable(doc, { body: table }, tableStyles);
+
       const lines = text.split('\n');
 
-      // Calculate the height of each line and the total height of all lines
-      const lineHeight = 10; // You can adjust this value as needed
-      let yPos = 60; // Starting y-position for text
+      const lineHeight = 10;
+      let yPos = 50;
 
-      // Loop through the lines and add them to the PDF
       lines.forEach(line => {
         doc.text(10, yPos, line);
         yPos += lineHeight;
